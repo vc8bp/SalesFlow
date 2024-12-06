@@ -3,7 +3,9 @@
 import { useSession, signOut } from "next-auth/react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Package, ClipboardList, LogOut } from "lucide-react"
+import { Package, LogOut } from "lucide-react"
+import CartComp from "@/components/cart/Cart"
+
 
 export function Navbar() {
   const { data: session } = useSession()
@@ -41,18 +43,18 @@ export function Navbar() {
               )}
             </div>
           </div>
-
           <div className="flex items-center">
             {session ? (
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-700">
                   {session.user?.name}
                 </span>
+                <CartComp/>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => signOut()}
-                  className="text-gray-700"
+                  className="text-gray-700 ml-0"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
                   Sign out
