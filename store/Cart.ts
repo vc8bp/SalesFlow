@@ -55,6 +55,10 @@ export const cartSlice = createSlice({
         syncToLocalStorage(updatedState);
         return updatedState;
       },
+      clearCart: (state) => {
+        syncToLocalStorage([]);
+        return [];
+      },
     },
   });
   
@@ -63,6 +67,6 @@ const syncToLocalStorage = (state: Array<Cart>) => {
   localStorage.setItem(localStorageKey, JSON.stringify(state));
 };
 
-export const { addToCart, update, remove } = cartSlice.actions;
+export const { addToCart, update, remove, clearCart } = cartSlice.actions;
 
 export default cartSlice.reducer;

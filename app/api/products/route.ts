@@ -5,19 +5,28 @@ import connectDB from '@/lib/db';
 import Product from '@/models/Product';
 import cloudinary from 'cloudinary';
 import { Readable } from 'stream';
+import mongoose from 'mongoose';
 
 
 
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id")
 
     if (!session) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
     await connectDB();
-    const products = await Product.find({});
+    let products = null
+    if(id) {
+      if(!mongoose.isValidObjectId(id)) return Response.json({message: "Not a valid Product id!!"}, { status: 400})
+      products = await Product.findById(id)
+      if(products == null) return Response.json({message: "Product not found!!"}, { status: 404})
+    }
+    else products = await Product.find({});
 
     return NextResponse.json(products);
   } catch (error) {

@@ -12,6 +12,7 @@ import { ShoppingBagIcon, TrashIcon } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { update, remove, Cart } from "@/store/Cart"; 
 import Image from "next/image";
+import Checkout from "./Checkout";
 
 export default function CartComp() {
   const cart = useSelector(({cart}: {cart: Array<Cart>}) => cart);
@@ -64,7 +65,7 @@ export default function CartComp() {
                 />
                 <div className="flex-1">
                   <h3 className="text-lg font-medium">{item.name}</h3>
-                  <p className="text-sm text-gray-500">Color: {item.color}</p>
+                  <p className="text-sm text-gray-500 flex gap-2">Color: <div className={`w-[20px] h-[20px] bg-gray-${item.color == "dark" ? 900 : 300}  rounded-full`}></div></p>
                   <p className="text-sm text-gray-500">
                     Product No: {item.productNo}
                   </p>
@@ -103,9 +104,11 @@ export default function CartComp() {
         </div>
 
         <SheetFooter className="mt-6">
-          <Button variant="default" className="w-full">
-            Proceed to Checkout
-          </Button>
+          <Checkout>
+            <Button variant="default" className="w-full">
+              Proceed to Checkout
+            </Button>
+          </Checkout>
         </SheetFooter>
       </SheetContent>
     </Sheet>

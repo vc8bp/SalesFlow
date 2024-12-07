@@ -16,13 +16,13 @@ const productSchema = new mongoose.Schema(
         type: Number,
         required: true,
         min: 0,
-        default: 0, // Ensure a default value
+        default: 0, 
       },
       light: {
         type: Number,
         required: true,
         min: 0,
-        default: 0, // Ensure a default value
+        default: 0, 
       },
     },
     price: {

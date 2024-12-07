@@ -8,6 +8,9 @@ import { useSession } from 'next-auth/react';
 import { Input } from '../ui/input';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '@/store/Cart';
+import { toast } from "sonner"
+import Link from 'next/link';
+
 
 interface ProductState {
     qty: number | ""; // Quantity type
@@ -29,7 +32,9 @@ function ProductCard({ product }: { product: Product }) {
     };
 
     const onSumbit = () => {
-        console.log("Called")
+        if (!state.qty) return toast.error("Please enter the quantity of the product.");
+        if (!state.color) return toast.error("Please select a color for the product.");
+
         const data = {
             _id: product._id,
             name: product.name,
@@ -41,6 +46,7 @@ function ProductCard({ product }: { product: Product }) {
         } 
         console.log("Dispatching data:", data);
         dispatch(addToCart(data))
+        toast.success(`${product.name} (${state.color}) has been added to your cart!`);
     }
 
     return (
@@ -87,9 +93,11 @@ function ProductCard({ product }: { product: Product }) {
 
             <CardFooter className="p-4 flex column flex-col gap-2 ">
                 {session?.user.isAdmin ? (
-                    <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg">
-                        Edit
-                    </Button>
+                    <Link href={`/product/add?id=${product._id}`} className='w-full' >
+                        <Button   className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg">
+                            Edit
+                        </Button>
+                    </Link>
                 ) : (
 
                     <>
