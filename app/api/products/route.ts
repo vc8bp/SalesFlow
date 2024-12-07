@@ -77,41 +77,82 @@ export async function POST(req: Request) {
   const price = formData.get('price') as string;
   const darkQuantity = formData.get('dark-quantity') as string;
   const lightQuantity = formData.get('light-quantity') as string;
-  const image = formData.get('image') as File;
-
-  // Validate required fields
-  if (!name || !productNo || !price || !darkQuantity || !lightQuantity || !image) {
-    return new NextResponse(
-      JSON.stringify({ error: 'All fields are required' }),
-      { status: 400 }
-    );
-  }
-
+  const image = formData.get('image') as File | null; 
+  const productId = formData.get('id') as string; 
   try {
-    const imageUrl = await uploadImageToCloudinary(image, productNo);
-
-    const productData = {
-      name,
-      productNo,
-      quantities: {
-        dark: parseInt(darkQuantity, 10),
-        light: parseInt(lightQuantity, 10),
-      },
-      price: parseFloat(price),
-      img: imageUrl,
-    };
-
     await connectDB();
-    const product = new Product(productData);
-    await product.save();
 
-    return new NextResponse(
-      JSON.stringify({
-        message: 'Product created successfully!',
-        product: productData,
-      }),
-      { status: 200 }
-    );
+    if (productId) {
+      // Update existing product
+      const existingProduct = await Product.findById(productId);
+
+      if (!existingProduct) {
+        return new NextResponse(
+          JSON.stringify({ error: 'Product not found' }),
+          { status: 404 }
+        );
+      }
+
+      // Update fields
+      existingProduct.name = name || existingProduct.name;
+      existingProduct.productNo = productNo || existingProduct.productNo;
+      existingProduct.price = price ? parseFloat(price) : existingProduct.price;
+      existingProduct.quantities = {
+        dark: darkQuantity
+          ? parseInt(darkQuantity, 10)
+          : existingProduct.quantities.dark,
+        light: lightQuantity
+          ? parseInt(lightQuantity, 10)
+          : existingProduct.quantities.light,
+      };
+
+      if (image) {
+        const imageUrl = await uploadImageToCloudinary(image, productNo);
+        existingProduct.img = imageUrl;
+      }
+
+      await existingProduct.save();
+
+      return new NextResponse(
+        JSON.stringify({
+          message: 'Product updated successfully!',
+          product: existingProduct,
+        }),
+        { status: 200 }
+      );
+    } else {
+      // Create a new product
+      if (!name || !productNo || !price || !darkQuantity || !lightQuantity || !image) {
+        return new NextResponse(
+          JSON.stringify({ error: 'All fields are required' }),
+          { status: 400 }
+        );
+      }
+
+      const imageUrl = await uploadImageToCloudinary(image, productNo);
+
+      const productData = {
+        name,
+        productNo,
+        quantities: {
+          dark: parseInt(darkQuantity, 10),
+          light: parseInt(lightQuantity, 10),
+        },
+        price: parseFloat(price),
+        img: imageUrl,
+      };
+
+      const newProduct = new Product(productData);
+      await newProduct.save();
+
+      return new NextResponse(
+        JSON.stringify({
+          message: 'Product created successfully!',
+          product: productData,
+        }),
+        { status: 200 }
+      );
+    }
   } catch (uploadError: any) {
     console.log({ code: uploadError?.code });
     if (uploadError?.code === 11000) {
@@ -121,9 +162,9 @@ export async function POST(req: Request) {
       );
     }
 
-    console.error('Error uploading to Cloudinary:', uploadError);
+    console.error('Error:', uploadError);
     return new NextResponse(
-      JSON.stringify({ error: 'Failed to upload image. Please try again.' }),
+      JSON.stringify({ error: 'Something went wrong. Please try again.' }),
       { status: 500 }
     );
   }

@@ -117,13 +117,14 @@ export default function CreateProductPage() {
     submitData.append("productNo", formData.productNo);
     submitData.append("price", formData.price);
     submitData.append("id", isUpdateId)
-    submitData.append("quantity", JSON.stringify(formData.quantities));
+    submitData.append("dark-quantity", formData.quantities.dark );
+    submitData.append("light-quantity", formData.quantities.light);
     if (formData.image) submitData.append("image", formData.image);
   
     try {
       const { data } = await axios.post("/api/products", submitData, { headers: { "Content-Type": "multipart/form-data", }, });
       router.push("/");
-      toast.success(`Product ${isUpdateId ? "Updated" : "Added"} Successfully!!!`)
+      toast.success(data.message || `Product ${isUpdateId ? "Updated" : "Added"} Successfully!!!`)
     } catch (error: any | AxiosError) {
       console.log(error)
       setError(error.response?.data?.message || "Failed to create product. Please try again.");

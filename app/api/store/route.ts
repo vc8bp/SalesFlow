@@ -62,6 +62,7 @@ export async function POST(req: Request) {
     const products: Array<any> = []
 
     const orderPromises: any = []
+    let total = 0
 
     // Use Promise.all to await all async operations inside map
     await Promise.all(cart.map(async (item: any) => {
@@ -69,38 +70,33 @@ export async function POST(req: Request) {
 
       console.log({ item })
       const product = await Product.findById(_id);
-      if (!product) 
-        throw new Error(`Product with ID ${_id} not found`);
+      
+      if (!product) throw new Error(`Product with ID ${_id} not found`);
 
-      if (product.quantities[color] < quantities) {
-        quantities = product.quantities[color]
-        console.log("updated quantities", quantities)
-      }
+      if (product.quantities[color] < quantities) quantities = product.quantities[color]
 
       if (quantities > 0) {
-        console.log("saving orders")
         product.quantities[color] -= quantities;
         products.push({
           productId: _id,
           color,
           quantity: quantities,
         })
-        console.log("Product pushed")
-        console.log({ products })
+
+        total += quantities * product.price
         orderPromises.push(product.save());
       }
     }));
 
     await Promise.all(orderPromises)
 
-    console.log("creating order")
-    console.log({ finalProduct: products })
 
     if (products.length) {
       await Order.create({
         storeId: customer._id,
         product: products,
         createdBy: session.user.id,
+        total
       });
     }
 

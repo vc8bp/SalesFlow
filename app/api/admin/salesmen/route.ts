@@ -44,3 +44,31 @@ export async function POST(request: Request) {
     );
   }
 }
+
+
+
+export async function GET(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return new Response(JSON.stringify({ error: "Access denied" }), { status: 401 });
+    }
+
+    await connectDB();
+
+    let orders;
+    if (session.user.isAdmin) {
+      orders = await User.find().sort({ createdAt: -1 }); 
+    } else {
+      orders = await User.find({ createdBy: session.user.id }).sort({ createdAt: -1 });
+    }
+
+    return new Response(JSON.stringify(orders), { status: 200 });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    return new Response(
+      JSON.stringify({ error: error.message || "Internal Server Error" }),
+      { status: 500 }
+    );
+  }
+}

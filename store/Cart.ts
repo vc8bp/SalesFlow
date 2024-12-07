@@ -12,11 +12,15 @@ export interface Cart {
 }
 
 const localStorageKey = "cart";
-const getInitialState = (): Array<Cart> => {
-  const storedCart = localStorage.getItem(localStorageKey);
-  return storedCart ? JSON.parse(storedCart) : [];
-};
+const isBrowser = typeof window !== "undefined";
 
+const getInitialState = (): Array<Cart> => {
+  if (isBrowser) {
+    const storedCart = localStorage.getItem(localStorageKey);
+    return storedCart ? JSON.parse(storedCart) : [];
+  }
+  return []; 
+};
 const initialState: Array<Cart> = getInitialState();
 
 export const cartSlice = createSlice({

@@ -6,6 +6,7 @@ const orderSchema = new mongoose.Schema({
     ref: 'Store',
     required: true,
   },
+  total: { type: Number, default: 0},
   product: [
     {
         productId: {
