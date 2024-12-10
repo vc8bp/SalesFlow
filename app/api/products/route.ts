@@ -75,14 +75,15 @@ export async function POST(req: Request) {
   const name = formData.get('name') as string;
   const productNo = formData.get('productNo') as string;
   const price = formData.get('price') as string;
-  const darkQuantity = formData.get('dark-quantity') as string;
-  const lightQuantity = formData.get('light-quantity') as string;
+  const qty = formData.get('quantity') as string;
   const image = formData.get('image') as File | null; 
-  const productId = formData.get('id') as string; 
+  const productId = formData.get('id'); 
   try {
     await connectDB();
 
-    if (productId) {
+    console.log({productId})
+    if (productId && productId != "null") {
+      console.log("adding")
       // Update existing product
       const existingProduct = await Product.findById(productId);
 
@@ -97,14 +98,7 @@ export async function POST(req: Request) {
       existingProduct.name = name || existingProduct.name;
       existingProduct.productNo = productNo || existingProduct.productNo;
       existingProduct.price = price ? parseFloat(price) : existingProduct.price;
-      existingProduct.quantities = {
-        dark: darkQuantity
-          ? parseInt(darkQuantity, 10)
-          : existingProduct.quantities.dark,
-        light: lightQuantity
-          ? parseInt(lightQuantity, 10)
-          : existingProduct.quantities.light,
-      };
+      existingProduct.quantities = JSON.parse(qty);
 
       if (image) {
         const imageUrl = await uploadImageToCloudinary(image, productNo);
@@ -121,8 +115,9 @@ export async function POST(req: Request) {
         { status: 200 }
       );
     } else {
+      console.log("Creating")
       // Create a new product
-      if (!name || !productNo || !price || !darkQuantity || !lightQuantity || !image) {
+      if (!name || !productNo || !price || !image) {
         return new NextResponse(
           JSON.stringify({ error: 'All fields are required' }),
           { status: 400 }
@@ -134,13 +129,12 @@ export async function POST(req: Request) {
       const productData = {
         name,
         productNo,
-        quantities: {
-          dark: parseInt(darkQuantity, 10),
-          light: parseInt(lightQuantity, 10),
-        },
+        quantities: JSON.parse(qty),
         price: parseFloat(price),
         img: imageUrl,
       };
+
+      console.log({productData})
 
       const newProduct = new Product(productData);
       await newProduct.save();

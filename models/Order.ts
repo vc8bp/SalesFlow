@@ -14,7 +14,7 @@ const orderSchema = new mongoose.Schema({
         ref: 'Product',
         required: true,
       },
-      color: {
+      size: {
         type: String,
         required: true,
       },

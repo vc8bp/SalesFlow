@@ -1,3 +1,4 @@
+import { productSizes } from '@/types/data';
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 
@@ -7,7 +8,7 @@ export interface Cart {
   productNo: string;
   price: number;
   img: string;
-  color: "" | "dark" | "light";
+  size: typeof productSizes[number];
   quantities: number ;
 }
 
@@ -28,7 +29,8 @@ export const cartSlice = createSlice({
     initialState,
     reducers: {
       addToCart: (state, action: PayloadAction<Cart>) => {
-        const existingItem = state.find((item) => item._id === action.payload._id && item.color === action.payload.color);
+        console.log(action.payload.size)
+        const existingItem = state.find((item) => item._id === action.payload._id && item.size === action.payload.size);
         
         if (existingItem) {
             existingItem.quantities = existingItem.quantities + action.payload.quantities;
@@ -41,19 +43,21 @@ export const cartSlice = createSlice({
       },
   
       update: (state, action: PayloadAction<Cart>) => {
-        const updatedState = state.map((item) =>
-          item._id === action.payload._id && item.color === action.payload.color
+        const updatedState = state.map((item) =>{
+          console.log({s: action.payload.size, ss: item.size})
+          return item._id === action.payload._id && item.size === action.payload.size
             ? { ...item, quantities: action.payload.quantities }
             : item
-        );
+        });
         
         syncToLocalStorage(updatedState);
         return updatedState;
       },
   
-      remove: (state, action: PayloadAction<{ _id: string; color: string }>) => {
+      remove: (state, action: PayloadAction<{ _id: string; size: string }>) => {
+        console.log({action: action.payload})
         const updatedState = state.filter(
-          (item) => !(item._id === action.payload._id && item.color === action.payload.color)
+          (item) => !(item._id === action.payload._id && item.size === action.payload.size)
         );
         
         syncToLocalStorage(updatedState);

@@ -1,5 +1,6 @@
 import connectDB from "@/lib/db";
 import Order from "@/models/Order";
+import "@/models/Store";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 
@@ -21,6 +22,7 @@ export async function GET(req: Request) {
           .populate({
             path: "product.productId", 
             model: "Product",
+            select: "name productNo img price"
           })
           .sort({ createdAt: -1 }); // Sort by newest first
       } else {
@@ -31,6 +33,7 @@ export async function GET(req: Request) {
           .populate({
             path: "product.productId", 
             model: "Product",
+            select: "name productNo img price"
           })
           .sort({ createdAt: -1 }); // Sort by newest first
       }

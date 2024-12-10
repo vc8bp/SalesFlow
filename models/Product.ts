@@ -1,4 +1,16 @@
 import mongoose from 'mongoose';
+import { productSizes } from "@/types/data"
+
+const sizesModel = {}
+
+productSizes.forEach(e => {
+  sizesModel[e] = {
+    type: Number,
+    required: true,
+    min: 0,
+    default: 0, 
+  }
+})
 
 const productSchema = new mongoose.Schema(
   {
@@ -11,20 +23,7 @@ const productSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    quantities: {
-      dark: {
-        type: Number,
-        required: true,
-        min: 0,
-        default: 0, 
-      },
-      light: {
-        type: Number,
-        required: true,
-        min: 0,
-        default: 0, 
-      },
-    },
+    quantities: sizesModel,
     price: {
       type: Number,
       required: true,

@@ -1,0 +1,1 @@
+export const productSizes = ["M", "L", "XL", "XXL", "3XL", "4XL", "5XL"]

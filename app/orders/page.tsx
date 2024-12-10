@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'; // Shadcn imports
 import { Input } from '@/components/ui/input'; // Shadcn Input import
 import Image from 'next/image';
+import { Separator } from '@/components/ui/separator';
 
 // Define types for the data
 interface Product {
@@ -16,7 +17,7 @@ interface Product {
     quantities: { [key: string]: number };
   };
   quantity: number;
-  color: string;
+  size: string;
 }
 
 interface Store {
@@ -47,12 +48,26 @@ export default function OrderDetails() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    // Fetching order details from the API
     const fetchOrders = async () => {
       try {
         const response = await fetch('/api/orders');
-        const data: Order[] = await response.json();
-        setOrders(data);
+        const data = await response.json();
+
+        const transformedOrders = data.map((order) => {
+          const groupedProducts = {};
+
+          order.product.forEach(({ productId, size, quantity }) => {
+            const id = productId._id;
+            if (!groupedProducts[id]) groupedProducts[id] = { productId, quantity: {}, };
+            groupedProducts[id].quantity[size] = quantity;
+          });
+
+          const products = Object.values(groupedProducts);
+
+          return { ...order, product: products };
+        });
+        console.log({ transformedOrders })
+        setOrders(transformedOrders);
       } catch (error) {
         console.error('Error fetching orders:', error);
       }
@@ -61,7 +76,7 @@ export default function OrderDetails() {
     fetchOrders();
   }, []);
 
-  // Filtering orders based on search term
+
   const filteredOrders = orders.filter((order) => {
     const lowerSearchTerm = searchTerm.toLowerCase();
     return (
@@ -71,15 +86,15 @@ export default function OrderDetails() {
       order.storeId.name.toLowerCase().includes(lowerSearchTerm) ||
       order.storeId.number.toLowerCase().includes(lowerSearchTerm) ||
       order.storeId.email.toLowerCase().includes(lowerSearchTerm) ||
-  
-      order.product.some((item) => 
+
+      order.product.some((item) =>
         item.productId.name.toLowerCase().includes(lowerSearchTerm) ||
         item.productId.productNo.toLowerCase().includes(lowerSearchTerm) ||
         item.productId.price.toString().includes(lowerSearchTerm)  // Converting price to string for search
       )
     );
   });
-  
+
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -114,72 +129,60 @@ export default function OrderDetails() {
 
               </CardHeader>
               <CardContent className="grid grid-cols-1 gap-6 md:grid-cols-3">
-  {/* Shop Details Section */}
-  <div className="space-y-4 md:col-span-1">
-    <h3 className="text-lg font-medium text-gray-700">Shop Details</h3>
-    <div className="text-gray-600 space-y-2">
-      <p>
-        <span className="font-semibold">Name:</span> {order.storeId.name}
-      </p>
-      <p>
-        <span className="font-semibold">Email:</span> {order.storeId.email}
-      </p>
-      <p>
-        <span className="font-semibold">Phone:</span> {order.storeId.number}
-      </p>
-      <p>
-        <span className="font-semibold">Address:</span> {order.storeId.address}
-      </p>
-    </div>
-  </div>
+                <div className="space-y-4 md:col-span-1">
+                  <h3 className="text-lg font-medium text-gray-700">Shop Details</h3>
+                  <div className="text-gray-600 space-y-2">
+                    <p>
+                      <span className="font-semibold">Name:</span> {order.storeId.name}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Email:</span> {order.storeId.email}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Phone:</span> {order.storeId.number}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Address:</span> {order.storeId.address}
+                    </p>
+                  </div>
+                </div>
 
-  {/* Products Section */}
-  <div className="space-y-6 md:col-span-2">
-    <h3 className="text-lg font-medium text-gray-700">Products Sold</h3>
-    {order.product.map((item) => (
-      <div
-        key={item._id}
-        className="flex flex-col sm:flex-row items-center bg-gray-100 p-4 rounded-lg shadow-sm gap-4"
-      >
-        {/* Product Image */}
-        <Image
-          src={item.productId.img}
-          alt={item.productId.name}
-          width={200}
-          height={100}
-          className="object-cover rounded-md"
-        />
+                <div className="space-y-6 md:col-span-2">
+                  <h3 className="text-lg font-medium text-gray-700">Products Sold</h3>
+                  {order.product.map((item) => (
+                    <div
+                      key={item._id}
+                      className="flex flex-col sm:flex-row items-center bg-gray-100 p-4 rounded-lg shadow-sm gap-4"
+                    >
+                      <Image
+                        src={item.productId.img}
+                        alt={item.productId.name}
+                        width={200}
+                        height={100}
+                        className="object-cover rounded-md"
+                      />
 
-        {/* Product Details */}
-        <div className="flex-1 space-y-2">
-          <p className="text-md font-semibold text-gray-800">{item.productId.name}</p>
-          <p className="text-sm text-gray-500">Product No: {item.productId.productNo}</p>
+                      <div className="flex-1 space-y-2">
+                        <p className="text-md font-semibold text-gray-800">{item.productId.name}</p>
+                        <p className="text-sm text-gray-500">Product No: {item.productId.productNo}</p>
 
-          {/* Price Highlight */}
-          <p className="text-lg font-semibold text-gray-900">
-            <span className="text-green-600">₹{item.productId.price}</span>
-          </p>
+                        <p className="text-lg font-semibold text-gray-900">
+                          <span className="text-green-600">₹{item.productId.price}</span>
+                        </p>
 
-          {/* Quantity Highlight */}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">Quantity:</span>
-            <span className="font-bold text-indigo-600">{item.quantity}</span>
-          </div>
-
-          {/* Color Highlight */}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">Color:</span>
-            <div
-              className={`w-[20px] h-[20px] ${
-                item.color === "dark" ? "bg-gray-900" : "bg-gray-300"
-              } rounded-full`}
-            ></div>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-</CardContent>
+                        <span className="text-sm text-gray-500">Quantity:</span><br />
+                        <div className="flex items-center space-x-2 flex-wrap ">
+                          {Object.keys(item.quantity).map(size => (
+                            <>
+                              <span className="font-bold text-indigo-600">{size} : {item.quantity[size]}</span> <Separator orientation="vertical" color='black' />
+                            </>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
 
             </Card>
           </div>

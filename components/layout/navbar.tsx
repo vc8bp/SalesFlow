@@ -20,28 +20,31 @@ export function Navbar() {
               <span className="ml-2 text-xl font-semibold">AssetManager</span>
             </Link>
 
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-4">
-              <Link 
-                href="/products" 
-                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
-              >
-                Products
-              </Link>
-              <Link 
-                href="/orders" 
-                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
-              >
-                Orders
-              </Link>
-              {session?.user?.isAdmin && (
+            {session?.user && (
+              <div className="hidden sm:ml-6 sm:flex sm:space-x-4">
                 <Link 
-                  href="/admin" 
+                  href="/products" 
                   className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
                 >
-                  Admin
+                  Products
                 </Link>
-              )}
-            </div>
+                <Link 
+                  href="/orders" 
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
+                >
+                  Orders
+                </Link>
+                {session?.user?.isAdmin && (
+                  <Link 
+                    href="/admin" 
+                    className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
+                  >
+                    Admin
+                  </Link>
+                )}
+              </div>
+            )}
+            
           </div>
           <div className="flex items-center">
             {session ? (

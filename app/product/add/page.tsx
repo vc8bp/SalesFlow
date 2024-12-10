@@ -10,6 +10,7 @@ import Image from "next/image";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
 import { Product } from "@/components/products/product-list";
+import { productSizes } from "@/types/data";
 
 export default function CreateProductPage() {
   const searchQuery = useSearchParams();
@@ -22,10 +23,11 @@ export default function CreateProductPage() {
     name: "",
     productNo: "",
     price: "",
-    quantities: { dark: 0, light: 0 },
+    quantities: productSizes.reduce((acc, size) => ({ ...acc, [size]: "" }), {}),
     image: null as File | null,
     imagePreview: null as string | null,
   });
+  console.log({formData})
 
   useEffect(() => {
     if (!searchQuery.get("id")) return;
@@ -39,7 +41,7 @@ export default function CreateProductPage() {
           name: data.name || "",
           productNo: data.productNo || "",
           price: data.price?.toString() || "",
-          quantities: { dark: data.quantities.dark, light: data.quantities.light },
+          quantities: data.quantities,
           image: null,
           imagePreview: data.img || null,
         });
@@ -76,29 +78,17 @@ export default function CreateProductPage() {
   ];
 
   const quantityFields = [
-    {
-      label: "Dark",
-      id: "dark-quantity",
+    ...productSizes.map(e => ({
+      label: `${e} Quantitity`,
+      id: e,
       type: "number",
-      value: formData.quantities.dark,
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-        setFormData((prev) => ({
-          ...prev,
-          quantities: { ...prev.quantities, dark: parseInt(e.target.value) || 0 },
-        })),
-    },
-    {
-      label: "Light",
-      id: "light-quantity",
-      type: "number",
-      value: formData.quantities.light,
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-        setFormData((prev) => ({
-          ...prev,
-          quantities: { ...prev.quantities, light: parseInt(e.target.value) || 0 },
-        })),
-    },
+      value: formData.quantities[e],
+    }))
   ];
+
+  console.log(formData)
+
+  console.log({quantityFields})
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     const isUpdateId = searchQuery.get("id")
@@ -106,19 +96,12 @@ export default function CreateProductPage() {
     setLoading(true);
     setError("");
   
-    if (formData.quantities.dark <= 0 && formData.quantities.light <= 0) {
-      setLoading(false);
-      setError("At least one color quantity is required.");
-      return;
-    }
-  
     const submitData = new FormData();
     submitData.append("name", formData.name);
     submitData.append("productNo", formData.productNo);
     submitData.append("price", formData.price);
     submitData.append("id", isUpdateId)
-    submitData.append("dark-quantity", formData.quantities.dark );
-    submitData.append("light-quantity", formData.quantities.light);
+    submitData.append("quantity", JSON.stringify(formData.quantities) );
     if (formData.image) submitData.append("image", formData.image);
   
     try {
@@ -196,7 +179,11 @@ export default function CreateProductPage() {
                     id={field.id}
                     type={field.type}
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        quantities: { ...prev.quantities, [e.target.id]: parseInt(e.target.value) || 0 },
+                      }))}
                     min={0}
                     className="w-full"
                   />

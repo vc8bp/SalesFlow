@@ -10,21 +10,22 @@ import { useDispatch } from 'react-redux';
 import { addToCart } from '@/store/Cart';
 import { toast } from "sonner"
 import Link from 'next/link';
+import { productSizes } from '@/types/data';
 
 
 interface ProductState {
     qty: number | ""; // Quantity type
-    color: 'dark' | 'light' | ''; // Union type for color
+    size: typeof productSizes[number]; 
 }
 
 
 function ProductCard({ product }: { product: Product }) {
     const { data: session } = useSession()
-    const [state, setState] = useState<ProductState>({ qty: "", color: '' });
+    const [state, setState] = useState<ProductState>({ qty: "", size: '' });
     const dispatch = useDispatch()
 
-    const handleColorSelection = (selectedColor: 'dark' | 'light') => {
-        setState((prev) => ({ ...prev, color: selectedColor }));
+    const handleSizeSelection = (selectedSize: typeof productSizes[number]) => {
+        setState((prev) => ({ ...prev, size: selectedSize }));
     };
 
     const handleQtyChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -33,7 +34,7 @@ function ProductCard({ product }: { product: Product }) {
 
     const onSumbit = () => {
         if (!state.qty) return toast.error("Please enter the quantity of the product.");
-        if (!state.color) return toast.error("Please select a color for the product.");
+        if (!state.size) return toast.error("Please select a size for the product.");
 
         const data = {
             _id: product._id,
@@ -41,12 +42,12 @@ function ProductCard({ product }: { product: Product }) {
             productNo: product.productNo,
             price: product.price,
             img: product.img,
-            color: state.color,
+            size: state.size,
             quantities: state.qty
-        } 
+        }
         console.log("Dispatching data:", data);
         dispatch(addToCart(data))
-        toast.success(`${product.name} (${state.color}) has been added to your cart!`);
+        toast.success(`${product.name} (${state.size}) has been added to your cart!`);
     }
 
     return (
@@ -73,18 +74,20 @@ function ProductCard({ product }: { product: Product }) {
                 </CardDescription>
 
                 <div className="mt-3">
-                    <p className="text-sm font-medium text-gray-600">Denim Quantities:</p>
-                    <div className="flex justify-between mt-1 text-sm">
-                        <span className="flex items-center gap-2">
-                            <span className="w-3 h-3 bg-gray-900 rounded-full"></span>
-                            Dark: <strong>{product.quantities.dark}</strong>
-                        </span>
-                        <span className="flex items-center gap-2">
-                            <span className="w-3 h-3 bg-gray-300 rounded-full"></span>
-                            Light: <strong>{product.quantities.light}</strong>
-                        </span>
+                    <p className="text-sm font-medium text-gray-600">Available Sizes:</p>
+                    <div className="grid grid-cols-3 gap-3 mt-2 text-sm">
+                        {Object.entries(product.quantities).map(([size, quantity]) => (
+                            <div
+                                key={size}
+                                className="flex items-center p-1 border rounded-lg shadow-sm bg-gray-50 gap-1"
+                            >
+                                <span className="text-gray-700 font-medium">{size} : </span>
+                                <strong className="text-lg text-gray-900"> {quantity}</strong>
+                            </div>
+                        ))}
                     </div>
                 </div>
+
 
                 <p className="mt-4 text-lg font-semibold text-primary">
                     ${product.price.toFixed(2)}
@@ -94,26 +97,33 @@ function ProductCard({ product }: { product: Product }) {
             <CardFooter className="p-4 flex column flex-col gap-2 ">
                 {session?.user.isAdmin ? (
                     <Link href={`/product/add?id=${product._id}`} className='w-full' >
-                        <Button   className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg">
+                        <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg">
                             Edit
                         </Button>
                     </Link>
                 ) : (
 
                     <>
-                        <div className="flex w-full gap-2">
-                            {/* Color selection */}
-                            <div className="w-full flex gap-1 items-center">
-                                <p>Color :</p>
-                                <div
-                                    className={`w-[30px] h-[30px] bg-gray-900 rounded-full cursor-pointer ${state.color === 'dark' ? 'ring-2 ring-green-500' : ''}`}
-                                    onClick={() => handleColorSelection('dark')}
-                                ></div>
-                                <div
-                                    className={`w-[30px] h-[30px] bg-gray-300 rounded-full cursor-pointer ${state.color === 'light' ? 'ring-2 ring-green-500' : ''}`}
-                                    onClick={() => handleColorSelection('light')}
-                                ></div>
+                        <div className="flex w-full gap-2 flex-col">
+                            {/* size selection */}
+                            <div className="w-full gap-3 items-center">
+                                <p className="text-sm font-medium">Size:</p>
+                                <div className="flex gap-2 flex-wrap">
+                                    {Object.keys(product.quantities).filter(e => product.quantities[e] > 0).map((size) => (
+                                        <div
+                                            key={size}
+                                            className={`flex items-center justify-center  rounded-lg border text-sm font-medium cursor-pointer transition-all p-1 ${state.size === size
+                                                    ? 'bg-green-100 text-green-700 border-green-500'
+                                                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
+                                                }`}
+                                            onClick={() => handleSizeSelection(size)}
+                                        >
+                                            {size}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
+
 
                             <input
                                 type="number"
