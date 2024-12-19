@@ -9,7 +9,7 @@ const orderSchema = new mongoose.Schema({
   total: { type: Number, default: 0},
   product: [
     {
-        productId: {
+      productId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product',
         required: true,
@@ -30,6 +30,31 @@ const orderSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  status: {
+    type: String,
+    enum : ['Pending', 'Conformed'],
+    default: 'Pending'
+  },
+  remark: [
+    {
+      by: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+      message: {
+        type: String,
+      },
+      status: {
+        type: String,
+        enum : ['Pending', 'Conformed'],
+        default: 'Pending'
+      },
+      time: {
+        type: Date,
+        default: Date.now,
+      },
+    }
+  ]
 }, {
   timestamps: true,
 });

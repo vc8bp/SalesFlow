@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function CreateSalesmanPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [role, setRole] = useState("") 
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -22,6 +24,7 @@ export default function CreateSalesmanPage() {
       email: formData.get("email"),
       password: formData.get("password"),
       number: formData.get("number"),
+      role: role
     }
 
     try {
@@ -38,7 +41,7 @@ export default function CreateSalesmanPage() {
       }
 
       router.push("/admin")
-      router.refresh()
+      // router.refresh()
     } catch (error) {
       setError("Failed to create salesman. Please try again.")
     } finally {
@@ -88,6 +91,26 @@ export default function CreateSalesmanPage() {
               required
               className="w-full"
             />
+          </div>
+
+          <div>
+            <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+              Role
+            </label>
+            <Select 
+              name="role" 
+              value={role} // Controlled value
+              onValueChange={setRole} // Update state on change
+            >
+              <SelectTrigger id="role"  className="w-full">
+                <SelectValue placeholder="Select a Role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="isSalesman">Salesman</SelectItem>
+                <SelectItem value="isManager">Manager</SelectItem>
+                <SelectItem value="isAdmin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

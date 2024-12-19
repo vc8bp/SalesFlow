@@ -46,6 +46,7 @@ export const authOptions: AuthOptions = {
       if (user) {
         token.id = user.id;
         token.isAdmin = user.isAdmin;
+        token.isManager = user.isManager
       }
       return token;
     },
@@ -53,6 +54,7 @@ export const authOptions: AuthOptions = {
       if (session?.user) {
         session.user.id = token.id as string;
         session.user.isAdmin = token.isAdmin as boolean;
+        session.user.isManager = token.isManager as boolean;
       }
       return session;
     }

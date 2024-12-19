@@ -2,8 +2,16 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'; // Shadcn imports
 import { Input } from '@/components/ui/input'; // Shadcn Input import
+import { Button } from '@/components/ui/button'; // Shadcn Button import
 import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogClose } from '@/components/ui/dialog'; // Shadcn Dialog import
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useSession } from 'next-auth/react';
+import axios from 'axios';
+import SingleOrder from "./SingleOrder"
+import { toast } from 'sonner';
 
 // Define types for the data
 interface Product {
@@ -40,25 +48,30 @@ interface Order {
   storeId: Store;
   product: Product[];
   createdAt: string;
-  total: number
+  total: number;
+  status: string;
 }
 
 export default function OrderDetails() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const { data: session } = useSession()
+  const [formData, setFormData] = useState({message: "", status: "Pending"})
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch('/api/orders');
-        const data = await response.json();
+        const {data} = await axios.get('/api/orders');
 
         const transformedOrders = data.map((order) => {
           const groupedProducts = {};
 
           order.product.forEach(({ productId, size, quantity }) => {
             const id = productId._id;
-            if (!groupedProducts[id]) groupedProducts[id] = { productId, quantity: {}, };
+            if (!groupedProducts[id]) groupedProducts[id] = { productId, quantity: {} };
             groupedProducts[id].quantity[size] = quantity;
           });
 
@@ -66,7 +79,6 @@ export default function OrderDetails() {
 
           return { ...order, product: products };
         });
-        console.log({ transformedOrders })
         setOrders(transformedOrders);
       } catch (error) {
         console.error('Error fetching orders:', error);
@@ -76,6 +88,33 @@ export default function OrderDetails() {
     fetchOrders();
   }, []);
 
+
+  console.log({orders})
+  const handleUpdateStatus = async () => {
+    console.log({ selectedOrder, ...formData });
+  
+    if (!selectedOrder || !formData.message || !formData.status) {
+      toast.error('Status and message are required.');
+      return;
+    }
+  
+    try {
+      setLoading(true);
+      const { data } = await axios.put('/api/orders', {  ...formData,  orderId: selectedOrder._id  });
+  
+      setOrders((prevOrders) => prevOrders.map((order) => order._id === selectedOrder._id  ? { ...order, status: formData.status }  : order));
+  
+      toast.success('Order status updated successfully!');
+      setModalOpen(false);
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      toast.error('Failed to update order status. Please try again.');
+    } finally {
+      setLoading(false);
+      setSelectedOrder(null);
+    }
+  };
+  
 
   const filteredOrders = orders.filter((order) => {
     const lowerSearchTerm = searchTerm.toLowerCase();
@@ -90,11 +129,10 @@ export default function OrderDetails() {
       order.product.some((item) =>
         item.productId.name.toLowerCase().includes(lowerSearchTerm) ||
         item.productId.productNo.toLowerCase().includes(lowerSearchTerm) ||
-        item.productId.price.toString().includes(lowerSearchTerm)  // Converting price to string for search
+        item.productId.price.toString().includes(lowerSearchTerm) // Converting price to string for search
       )
     );
   });
-
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -110,86 +148,40 @@ export default function OrderDetails() {
         />
       </div>
 
-      {/* Orders Section */}
       {filteredOrders.length > 0 ? (
-        filteredOrders.map((order) => (
-          <div key={order._id} className="flex flex-col space-y-6">
-            <Card className="bg-white shadow-lg rounded-lg overflow-hidden">
-              <CardHeader className='flex flex-row flex-wrap' >
-                <div className='flex-grow' >
-                  <h2 className="text-2xl font-semibold text-gray-800">Salesman: {order.createdBy.name}</h2>
-                  <p className="text-sm text-gray-600">
-                    <span className="font-semibold">Order Created:</span> {new Date(order.createdAt).toLocaleString()}
-                  </p>
-                </div>
-                <p className="text-2xl font-bold text-white bg-gray-800 rounded-md px-4 py-2 inline-block shadow-md border border-gray-600">
-                  {order.total}
-                </p>
-
-
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                <div className="space-y-4 md:col-span-1">
-                  <h3 className="text-lg font-medium text-gray-700">Shop Details</h3>
-                  <div className="text-gray-600 space-y-2">
-                    <p>
-                      <span className="font-semibold">Name:</span> {order.storeId.name}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Email:</span> {order.storeId.email}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Phone:</span> {order.storeId.number}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Address:</span> {order.storeId.address}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-6 md:col-span-2">
-                  <h3 className="text-lg font-medium text-gray-700">Products Sold</h3>
-                  {order.product.map((item) => (
-                    <div
-                      key={item._id}
-                      className="flex flex-col sm:flex-row items-center bg-gray-100 p-4 rounded-lg shadow-sm gap-4"
-                    >
-                      <Image
-                        src={item.productId.img}
-                        alt={item.productId.name}
-                        width={200}
-                        height={100}
-                        className="object-cover rounded-md"
-                      />
-
-                      <div className="flex-1 space-y-2">
-                        <p className="text-md font-semibold text-gray-800">{item.productId.name}</p>
-                        <p className="text-sm text-gray-500">Product No: {item.productId.productNo}</p>
-
-                        <p className="text-lg font-semibold text-gray-900">
-                          <span className="text-green-600">₹{item.productId.price}</span>
-                        </p>
-
-                        <span className="text-sm text-gray-500">Quantity:</span><br />
-                        <div className="flex items-center space-x-2 flex-wrap ">
-                          {Object.keys(item.quantity).map(size => (
-                            <>
-                              <span className="font-bold text-indigo-600">{size} : {item.quantity[size]}</span> <Separator orientation="vertical" color='black' />
-                            </>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-
-            </Card>
-          </div>
-        ))
+        filteredOrders.map((order) => <SingleOrder order={order} setSelectedOrder={setSelectedOrder} setModalOpen={setModalOpen} />)
       ) : (
         <p className="text-center text-gray-600">No orders found.</p>
       )}
+
+      {(session?.user.isManager || session?.user.isAdmin) && <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="max-w-lg mx-auto">
+          <DialogHeader>
+            <DialogTitle>Update Order Status</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Select value={formData.status} onValueChange={(value) => setFormData(p => ({...p, status: value}))}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="Conformed">Conformed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Textarea
+              placeholder="Enter a message"
+              value={formData.message}
+              onChange={(e) => setFormData(p => ({...p, message: e.target.value}))}
+              className="w-full"
+            />
+          </div>
+          <DialogFooter className="flex justify-end space-x-2">
+            <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdateStatus} disabled={loading}>Submit</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>}
     </div>
   );
 }

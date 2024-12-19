@@ -5,13 +5,16 @@ export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
     const isAdmin = token?.isAdmin;
+    const isManager = token?.isManager
     const pathname = req.nextUrl.pathname;
 
-    // Protect admin routes
     if (pathname.startsWith("/admin") && !isAdmin) {
       return NextResponse.redirect(new URL("/", req.url));
     }
-
+    if (isManager && pathname !== "/orders" && !pathname.startsWith("/orders")) {
+      return NextResponse.redirect(new URL("/orders", req.url));
+    }
+    
     return NextResponse.next();
   },
   {

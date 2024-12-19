@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, email, password, number } = body;
+    const { name, email, password, number, role } = body;
 
     await connectDB();
 
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       email,
       password,
       number,
-      isAdmin: false,
+      [role] : true
     });
 
     return NextResponse.json({ message: 'Salesman created successfully' });

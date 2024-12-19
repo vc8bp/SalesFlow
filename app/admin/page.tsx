@@ -67,6 +67,7 @@ export default function AdminPage() {
                 <TableHead className="text-left">Email</TableHead>
                 <TableHead className="text-left">Number</TableHead>
                 <TableHead className="text-left">Admin</TableHead>
+                <TableHead className="text-left">Manager</TableHead>
                 <TableHead className="text-left">Created At</TableHead>
               </TableRow>
             </TableHeader>
@@ -77,6 +78,7 @@ export default function AdminPage() {
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.number}</TableCell>
                   <TableCell>{user.isAdmin ? "Yes" : "No"}</TableCell>
+                  <TableCell>{user.isManager ? "Yes" : "No"}</TableCell>
                   <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                 </TableRow>
               ))}

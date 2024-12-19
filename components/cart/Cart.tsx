@@ -36,7 +36,7 @@ export default function CartComp() {
           Cart
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-full min-w-[100%] max-w-[500px]">
+      <SheetContent className="w-full min-w-[100%] max-w-[500px] overflow-auto">
         <SheetHeader>
           <SheetTitle>Your Cart</SheetTitle>
           <p className="text-sm text-gray-500">
@@ -98,7 +98,7 @@ export default function CartComp() {
           </div>
         </div>
 
-        <SheetFooter className="mt-6">
+        <SheetFooter className="mt-6 sticky bottom-0">
           <Checkout>
             <Button variant="default" className="w-full">
               Proceed to Checkout
