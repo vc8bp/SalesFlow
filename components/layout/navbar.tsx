@@ -34,12 +34,12 @@ export function Navbar() {
           <div className="hidden lg:flex items-center space-x-4">
             {session?.user && (
               <div className="flex space-x-4">
-                <Link 
+                {!session?.user.isManager && <Link 
                   href="/products" 
                   className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
                 >
                   Products
-                </Link>
+                </Link>}
                 <Link 
                   href="/orders" 
                   className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
@@ -62,7 +62,7 @@ export function Navbar() {
                 <span className="text-sm text-gray-700">
                   {session.user?.name}
                 </span>
-                <CartComp />
+                {(!session.user.isAdmin || !session.user.isManager) && <CartComp />}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -109,7 +109,8 @@ export function Navbar() {
                   <div className="px-3 py-2 text-base font-medium text-gray-700">
                     {session.user?.name}
                   </div>
-                  <CartComp />
+
+                  {(!session.user.isAdmin || !session.user.isManager) && <CartComp />}
                   <button
                     onClick={() => signOut()}
                     className="w-full px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100"
